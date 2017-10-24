@@ -8,7 +8,7 @@ typedef unsigned char BYTE;
 
 namespace Math
 {
-	const float CONST_PI = 3.1415926f;
+	const float PI = 3.1415926f;
 
 	struct VECTOR2
 	{

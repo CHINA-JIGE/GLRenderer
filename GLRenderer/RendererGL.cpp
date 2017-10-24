@@ -57,23 +57,21 @@ void IRenderer::SetDisplayFunc(void(*CallbackFunc)())
 	glutDisplayFunc(CallbackFunc);
 }
 
-void IRenderer::LoadGeometry()
+void IRenderer::SetIdleFunc(void(*CallbackFunc)())
+{
+	glutIdleFunc(CallbackFunc);
+}
+
+void IRenderer::LoadGeometry(const std::vector<Vertex>& vertexList)
 {
 	//load vertices
-	Vertex vertices[3] =
+	/*Vertex vertices[3] =
 	{
 		Vertex({-0.5f,-0.8f,0.0f},{0.1f,0.2f,0.8f},{1.0f,0.0f}),
 		Vertex({ 0.7f,-0.6f,0.0f },{ 1.0f,0.2f,0.2f },{ 1.0f,1.0f }),
 		Vertex({ 0.0f,0.6f,0.0f },{ 0.1f,0.9f,0.2f },{ 1.0f,0.0f })
-	};
-
-	/*Math::VECTOR3 vertices[3] =
-	{
-		{0.5f,-0.6f,1.0f },
-		{-0.5f,-0.6f,1.0f },
-		{ 0.0f,0.6f,1.0f }
 	};*/
-	
+	mVertexList = vertexList;
 
 	//vertex array object
 	GLuint vao;
@@ -84,7 +82,7 @@ void IRenderer::LoadGeometry()
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), (void*)vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, mVertexList.size() * sizeof(Vertex), (void*)&mVertexList.at(0), GL_STATIC_DRAW);
 
 	//initialize the vertex position attribute from the vertex shader
 	GLuint attr1 =  glGetAttribLocation(mGpuProgramHandle, "inPos");
@@ -113,15 +111,23 @@ void IRenderer::Clear()
 	glClear(GL_COLOR_BUFFER_BIT);// | GL_DEPTH_BUFFER_BIT);
 }
 
-void IRenderer::Draw()
+void IRenderer::Draw(float angle)
 {
+	//bind VAO
 	glBindVertexArray(mVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	//update shader variable
+	GLint angleLoc= glGetUniformLocation(mGpuProgramHandle, "angle");
+	glUniform1f(angleLoc, angle);
+
+	//draw
+	glDrawArrays(GL_TRIANGLES, 0, mVertexList.size());
 }
 
 void IRenderer::Present()
 {
-	glFlush();
+	glutSwapBuffers();
+	glutPostRedisplay();
 }
 
 /***********************************************
@@ -132,8 +138,8 @@ void IRenderer::Present()
 
 bool IRenderer::mFunction_InitShaders()
 {
-	ShaderInfo VSInfo = { "../shader/myVS.glsl",GL_VERTEX_SHADER };
-	ShaderInfo FSInfo = { "../shader/myFS.glsl",GL_FRAGMENT_SHADER };
+	ShaderInfo VSInfo = { "../../shader/myVS.glsl",GL_VERTEX_SHADER };
+	ShaderInfo FSInfo = { "../../shader/myFS.glsl",GL_FRAGMENT_SHADER };
 
 	//similar to Technique of D3DX11(Effect11)
 	GLuint programHandle = glCreateProgram();

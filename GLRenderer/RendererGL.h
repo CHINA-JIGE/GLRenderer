@@ -51,11 +51,13 @@ public:
 
 	void SetDisplayFunc(void(*CallbackFunc)());
 
-	void	LoadGeometry();
+	void SetIdleFunc(void(*CallbackFunc)());
+
+	void	LoadGeometry(const std::vector<Vertex>& vertexList);
 
 	void Clear();
 
-	void Draw();
+	void Draw(float angle);
 
 	void	Present();
 
@@ -77,6 +79,8 @@ private:
 	GLuint		mVAO;
 
 	GLuint		mVBO;
+
+	std::vector<Vertex>	mVertexList;
 
 	//customized shaders loading
 	bool			mFunction_InitShaders();
