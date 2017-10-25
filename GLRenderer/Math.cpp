@@ -1,11 +1,11 @@
 
 /***********************************************************************
 
-				¼òÊö£ºImplementation of Math Functions
+				Desc£ºImplementation of Math Functions
 
 ***********************************************************************/
 
-
+#include "pch.h"
 #include "Math.h"
 
 using namespace Math;
@@ -94,6 +94,7 @@ inline VECTOR4	Math::Matrix_Multiply(const MATRIX4x4 leftMat, const VECTOR4& rig
 
 MATRIX4x4	Math::Matrix_Translation(float dx, float dy, float dz)
 {
+	//prepared for column vector...
 	MATRIX4x4 outMatrix;
 	outMatrix.SetMatrix(
 	{
@@ -173,22 +174,22 @@ MATRIX4x4	Math::Matrix_PerspectiveProjection(float ViewAngleY, float aspectRatio
 
 	//the implementation annotated below ,is the implement of D3DX
 
-	/*float term11 = 1.0f / (aspectRatio*tanf(ViewAngleY / 2.0f));
-	float term22 = 1.0f / tanf(ViewAngleY / 2.0f));
+	float term11 = 1.0f / (aspectRatio*tanf(ViewAngleY / 2.0f));
+	float term22 = 1.0f / tanf(ViewAngleY / 2.0f);
 	float term33 = FarPlaneZ / (FarPlaneZ - NearPlaneZ);
 	float term34 = -NearPlaneZ*FarPlaneZ / (FarPlaneZ - NearPlaneZ);
 
 	MATRIX4x4 outMatrix;
 	outMatrix.SetRow(0,	{ term11,	0,				0,				0 });
-	outMatrix.SetRow(1,	{ 0,			term22,		0,				0 });
-	outMatrix.SetRow(2,	{ 0,			0,				term33,		term34 });
-	outMatrix.SetRow(3,	{ 0,			0,				1,				0 });*/
+	outMatrix.SetRow(1,	{ 0,			term22,	0,				0 });
+	outMatrix.SetRow(2,	{ 0,			0,				term33,	term34 });
+	outMatrix.SetRow(3,	{ 0,			0,				1,				0 });
 
 
 
 	//But now, I am to implement my own Soft Renderer, I can try
 	//to map the Z into LINEAR Space, and see how it'll go.
-	float term11 = 1.0f / (aspectRatio*tanf(ViewAngleY / 2.0f));
+	/*float term11 = 1.0f / (aspectRatio*tanf(ViewAngleY / 2.0f));
 	float term22 = 1.0f / tanf(ViewAngleY / 2.0f);
 	float term33 = 1.0f / (FarPlaneZ - NearPlaneZ);
 	float term34 = -NearPlaneZ / (FarPlaneZ - NearPlaneZ);
@@ -197,7 +198,7 @@ MATRIX4x4	Math::Matrix_PerspectiveProjection(float ViewAngleY, float aspectRatio
 	outMatrix.SetRow(0, { term11,	0,				0,				0 });
 	outMatrix.SetRow(1, { 0,			term22,		0,				0 });
 	outMatrix.SetRow(2, { 0,			0,				term33,		term34 });
-	outMatrix.SetRow(3, { 0,			0,				1,				0 });
+	outMatrix.SetRow(3, { 0,			0,				1,				0 });*/
 
 	return outMatrix;
 };

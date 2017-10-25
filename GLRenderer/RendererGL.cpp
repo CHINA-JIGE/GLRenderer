@@ -9,11 +9,15 @@
 
 ***********************************************************/
 
+#include "pch.h"
 #include "RendererGL.h"
 
-IRenderer::IRenderer()
+IRenderer::IRenderer():
+	m_pMesh(nullptr),
+	m_pCamera(nullptr),
+	mGpuProgramHandle(-1)
 {
-	mGpuProgramHandle = 0;
+
 }
 
 IRenderer::~IRenderer()
@@ -44,6 +48,14 @@ bool IRenderer::Init(int argc, char * argv[], DWORD displayMode, int windowPosX,
 
 	mFunction_InitShaders();
 
+	//face culling
+	glEnable(GL_CULL_FACE);
+
+	glFrontFace(GL_CW);
+
+	//enable Z-Test
+	glEnable(GL_DEPTH_TEST);
+
 	return true;
 }
 
@@ -62,18 +74,13 @@ void IRenderer::SetIdleFunc(void(*CallbackFunc)())
 	glutIdleFunc(CallbackFunc);
 }
 
-void IRenderer::LoadGeometry(const std::vector<Vertex>& vertexList)
+void IRenderer::SetTargetMesh(IMesh* pMesh)
 {
-	//load vertices
-	/*Vertex vertices[3] =
-	{
-		Vertex({-0.5f,-0.8f,0.0f},{0.1f,0.2f,0.8f},{1.0f,0.0f}),
-		Vertex({ 0.7f,-0.6f,0.0f },{ 1.0f,0.2f,0.2f },{ 1.0f,1.0f }),
-		Vertex({ 0.0f,0.6f,0.0f },{ 0.1f,0.9f,0.2f },{ 1.0f,0.0f })
-	};*/
-	mVertexList = vertexList;
+	m_pMesh = pMesh;
+	std::vector<Vertex>* pTargetVertexList = pMesh->m_pVB_Mem;
+	std::vector<uint32_t>* pTargertIndexList = pMesh->m_pIB_Mem;
 
-	//vertex array object
+	//vertex array object(save render-related states of current vertex buffer)
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -82,7 +89,7 @@ void IRenderer::LoadGeometry(const std::vector<Vertex>& vertexList)
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, mVertexList.size() * sizeof(Vertex), (void*)&mVertexList.at(0), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, pTargetVertexList->size() * sizeof(Vertex), (void*)&pTargetVertexList->at(0), GL_STATIC_DRAW);
 
 	//initialize the vertex position attribute from the vertex shader
 	GLuint attr1 =  glGetAttribLocation(mGpuProgramHandle, "inPos");
@@ -91,37 +98,68 @@ void IRenderer::LoadGeometry(const std::vector<Vertex>& vertexList)
 
 	GLuint attr2 =  glGetAttribLocation(mGpuProgramHandle, "inColor");
 	glEnableVertexAttribArray(attr2);
-	glVertexAttribPointer(attr2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)12);
+	glVertexAttribPointer(attr2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)12);
 
-	GLuint attr3 = glGetAttribLocation(mGpuProgramHandle, "inTexcoord");
+	GLuint attr3 = glGetAttribLocation(mGpuProgramHandle, "inNormal");
 	glEnableVertexAttribArray(attr3);
-	glVertexAttribPointer(attr3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)24);
+	glVertexAttribPointer(attr3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)28);
 
+	GLuint attr4 = glGetAttribLocation(mGpuProgramHandle, "inTexcoord");
+	glEnableVertexAttribArray(attr3);
+	glVertexAttribPointer(attr3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)40);
 
 	mVAO = vao;
 	mVBO = vbo;
 	//avoid disturbance
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
+
+}
+
+void IRenderer::SetCamera(ICamera * pCamera)
+{
+	m_pCamera = pCamera;
 }
 
 void IRenderer::Clear()
 {
 	glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);// | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
 }
 
-void IRenderer::Draw(float angle)
+void IRenderer::Render()
 {
-	//bind VAO
+	if (m_pMesh == nullptr) { ERROR_MSG("IRenderer: mesh hasn't been set!"); }
+	if(m_pCamera==nullptr) { ERROR_MSG("IRenderer: camera hasn't been set!"); }
+
+	//bind VAO (set saved states in one call)
 	glBindVertexArray(mVAO);
+	glUseProgram(mGpuProgramHandle);
 
 	//update shader variable
-	GLint angleLoc= glGetUniformLocation(mGpuProgramHandle, "angle");
-	glUniform1f(angleLoc, angle);
+	GLint shaderVar_WorldMat = glGetUniformLocation(mGpuProgramHandle, "gWorldMatrix");
+	Math::MATRIX4x4 worldMat;
+	m_pMesh->GetWorldMatrix(worldMat);
+	glUniformMatrix4fv(shaderVar_WorldMat,1, true, (float*)&worldMat);
 
-	//draw
-	glDrawArrays(GL_TRIANGLES, 0, mVertexList.size());
+	GLint shaderVar_ViewMat = glGetUniformLocation(mGpuProgramHandle, "gViewMatrix");
+	Math::MATRIX4x4 viewMat;
+	m_pCamera->GetViewMatrix(viewMat);
+	glUniformMatrix4fv(shaderVar_ViewMat, 1, true, (float*)&viewMat);
+
+	GLint shaderVar_ProjMat = glGetUniformLocation(mGpuProgramHandle, "gProjMatrix");
+	Math::MATRIX4x4 projMat;
+	m_pCamera->GetProjMatrix(projMat);
+	glUniformMatrix4fv(shaderVar_ProjMat, 1, true, (float*)&projMat);
+
+	//***********issue draw call***********
+	//glDrawArrays(GL_TRIANGLES, 0, m_pTargetVertexList->size());
+	glEnable(GL_CULL_FACE);
+	std::vector<uint32_t>* pTargertIndexList = m_pMesh->m_pIB_Mem;
+	glDrawElements(GL_TRIANGLES, pTargertIndexList->size(), GL_UNSIGNED_INT, &pTargertIndexList->at(0));
+	glBindVertexArray(0);
+	glUseProgram(0);
 }
 
 void IRenderer::Present()

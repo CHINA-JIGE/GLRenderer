@@ -24,12 +24,57 @@
     <ClCompile Include="Math.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FileLoader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="_GeometryMeshGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RendererGL.h">
       <Filter>源文件</Filter>
     </ClInclude>
     <ClInclude Include="Math.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FileLoader.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Types_def.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="_GeometryMeshGenerator.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
       <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>

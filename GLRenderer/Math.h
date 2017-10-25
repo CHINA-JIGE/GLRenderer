@@ -1,3 +1,13 @@
+/****************************************
+
+				3D Math Library
+				Author:JiGe!
+				software engineering 2015
+				SCUT
+
+****************************************/
+
+
 #pragma once
 #include <cmath>
 #include <algorithm>

@@ -10,32 +10,14 @@
 
 #pragma once
 
-#include <fstream>
-#include <vector>
-#include <algorithm>
-#include <iostream>
-#include <string>
-#include <sstream>
-#include "glew.h"
-#include "freeglut.h"
-#include "Math.h"
+#include "pch.h"
+#include "FileLoader.h"
+#include "Camera.h"
+#include "Texture.h"
+#include "Mesh.h"
+
 
 #define ERROR_MSG(msg) std::cout<<msg<<std::endl;//throw std::exception(std::string(msg).c_str());
-
-struct Vertex
-{
-	Vertex(){}
-
-	/*Vertex(Math::VECTOR3 _pos, Math::VECTOR3 _color) :
-		pos(_pos), color(_color) {};*/
-
-	Vertex(Math::VECTOR3 _pos, Math::VECTOR3 _color, Math::VECTOR2 _texcoord):
-		pos(_pos),color(_color),texcoord(_texcoord) {};
-
-	Math::VECTOR3 pos;
-	Math::VECTOR3 color;
-	Math::VECTOR2 texcoord;
-};
 
 class IRenderer
 {
@@ -53,11 +35,13 @@ public:
 
 	void SetIdleFunc(void(*CallbackFunc)());
 
-	void	LoadGeometry(const std::vector<Vertex>& vertexList);
+	void	SetTargetMesh(IMesh* pMesh);
+
+	void	SetCamera(ICamera* pCamera);
 
 	void Clear();
 
-	void Draw(float angle);
+	void Render();
 
 	void	Present();
 
@@ -70,17 +54,19 @@ private:
 		std::vector<GLchar>	sourceBuf;//actual source data buffer
 	};
 
-	GLuint		mVSHandle;
+	GLuint		mVSHandle;//vertrex shader
 
-	GLuint		mFSHandle;
+	GLuint		mFSHandle;//fragment shader
 
-	GLuint		mGpuProgramHandle;
+	GLuint		mGpuProgramHandle;//gpu program handle
 
-	GLuint		mVAO;
+	GLuint		mVAO;//states encapsulation of VBO
 
 	GLuint		mVBO;
 
-	std::vector<Vertex>	mVertexList;
+	IMesh*		m_pMesh;
+
+	ICamera*	m_pCamera;
 
 	//customized shaders loading
 	bool			mFunction_InitShaders();
