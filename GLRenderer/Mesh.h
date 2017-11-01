@@ -75,7 +75,7 @@
 
 	private:
 
-		void	Destroy();
+		void		mFunction_UploadDataToVRAM();
 
 		//invoked by NoiseRenderer
 		void		mFunction_UpdateWorldMatrix();
@@ -100,11 +100,13 @@
 		float									mRotationZ_Roll;
 
 
-		MATRIX4x4						mMatrixWorld;
+		MATRIX4x4							mMatrixWorld;
 		//MATRIX4x4						mMatrixWorldInvTranspose;
 		std::vector<Vertex>*			m_pVB_Mem;//vertex in CPU memory
-		std::vector<UINT>*			m_pIB_Mem;//index in CPU memory
-		
+		std::vector<UINT>*				m_pIB_Mem;//index in CPU memory
+		GLuint		mVAO;//states encapsulation of VBO
+		GLuint		mVBO;//similar to Id3d11Buffer
+
 		Material							mMaterial;
 		//graphic attribute
 		ITexture*							m_pTexture;

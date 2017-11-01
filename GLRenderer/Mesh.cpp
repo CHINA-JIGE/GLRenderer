@@ -38,10 +38,6 @@ IMesh::IMesh()
 
 IMesh::~IMesh()
 {
-};
-
-void IMesh::Destroy()
-{
 	delete m_pVB_Mem;
 	delete m_pIB_Mem;
 };
@@ -58,6 +54,8 @@ void	IMesh::CreatePlane(float fWidth,float fDepth,UINT iRowCount,UINT iColumnCou
 	//delegate vert/idx creation duty to MeshGenerator 
 	mMeshGenerator.CreatePlane(fWidth, fDepth, iRowCount, iColumnCount, *m_pVB_Mem, *m_pIB_Mem);
 
+	//!!!!!!!!!!!!!!!!!!!!
+	mFunction_UploadDataToVRAM();
 };
 
 void IMesh::CreateBox(float fWidth,float fHeight,float fDepth,UINT iDepthStep,UINT iWidthStep,UINT iHeightStep)
@@ -67,6 +65,9 @@ void IMesh::CreateBox(float fWidth,float fHeight,float fDepth,UINT iDepthStep,UI
 
 	//mesh creation delegate to MeshGenerator
 	mMeshGenerator.CreateBox(fWidth, fHeight, fDepth, iDepthStep, iWidthStep, iHeightStep, *m_pVB_Mem, *m_pIB_Mem);
+
+	//!!!!!!!!!!!!!!!!!!!!
+	mFunction_UploadDataToVRAM();
 }
 
 void	IMesh::CreateSphere(float fRadius,UINT iColumnCount, UINT iRingCount, bool bInvertNormal)
@@ -81,6 +82,8 @@ void	IMesh::CreateSphere(float fRadius,UINT iColumnCount, UINT iRingCount, bool 
 	//mesh creation delegate to MeshGenerator
 	mMeshGenerator.CreateSphere(fRadius, iColumnCount, iRingCount,bInvertNormal, *m_pVB_Mem, *m_pIB_Mem);
 
+	//!!!!!!!!!!!!!!!!!!!!
+	mFunction_UploadDataToVRAM();
 };
 
 void IMesh::CreateCylinder(float fRadius,float fHeight,UINT iColumnCount,UINT iRingCount)
@@ -95,6 +98,8 @@ void IMesh::CreateCylinder(float fRadius,float fHeight,UINT iColumnCount,UINT iR
 	//mesh creation delegate to MeshGenerator
 	mMeshGenerator.CreateCylinder(fRadius,fHeight, iColumnCount, iRingCount, *m_pVB_Mem, *m_pIB_Mem);
 
+	//!!!!!!!!!!!!!!!!!!!!
+	mFunction_UploadDataToVRAM();
 };
 
 bool IMesh::LoadFile_STL(std::string pFilePath)
@@ -107,7 +112,7 @@ bool IMesh::LoadFile_STL(std::string pFilePath)
 	std::vector<VECTOR3> tmpVertexList;
 	std::vector<VECTOR3> tmpNormalList;
 	std::string				tmpInfo;
-	Vertex	tmpCompleteV;
+	Vertex				tmpCompleteV;
 	VECTOR3			tmpBoundingBoxCenter(0, 0, 0);
 
 	//¼ÓÔØSTL
@@ -143,6 +148,9 @@ bool IMesh::LoadFile_STL(std::string pFilePath)
 		if (i % 3 == 2) { k++; }
 	}
 
+	//!!!!!!!!!!!!!!!!!!!!
+	mFunction_UploadDataToVRAM();
+
 	return true;
 }
 
@@ -164,6 +172,10 @@ bool IMesh::LoadFile_OBJ(std::string pFilePath)
 		ERROR_MSG("Noise Mesh : Load OBJ failed!");
 		return false;
 	}
+
+
+	//!!!!!!!!!!!!!!!!!!!!
+	mFunction_UploadDataToVRAM();
 
 	return true;
 }
@@ -293,6 +305,46 @@ void IMesh::ComputeBoundingBox(BOUNDINGBOX& outBox)
 /***********************************************************************
 								PRIVATE					                    
 ***********************************************************************/
+
+void IMesh::mFunction_UploadDataToVRAM()
+{
+	//------------UPDATE to buffer
+
+	//vertex array object(save render-related states of current vertex buffer)
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	int a =sizeof(Vertex);
+	//create buffer object
+	GLuint vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, m_pVB_Mem->size() * sizeof(Vertex), (void*)&m_pVB_Mem->at(0), GL_STATIC_DRAW);
+
+	//initialize the vertex position attribute from the vertex shader
+	GLuint attr1 = glGetAttribLocation(gGpuProgramHandle, "inPos");
+	glEnableVertexAttribArray(attr1);
+	glVertexAttribPointer(attr1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+	GLuint attr2 = glGetAttribLocation(gGpuProgramHandle, "inColor");
+	glEnableVertexAttribArray(attr2);
+	glVertexAttribPointer(attr2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)12);
+
+	GLuint attr3 = glGetAttribLocation(gGpuProgramHandle, "inNormal");
+	glEnableVertexAttribArray(attr3);
+	glVertexAttribPointer(attr3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)28);
+
+	GLuint attr4 = glGetAttribLocation(gGpuProgramHandle, "inTexcoord");
+	glEnableVertexAttribArray(attr4);
+	glVertexAttribPointer(attr4, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)40);
+
+	mVAO = vao;
+	mVBO = vbo;
+	//avoid disturbance
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
 
 void	IMesh::mFunction_UpdateWorldMatrix()
 {

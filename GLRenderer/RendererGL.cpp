@@ -12,10 +12,11 @@
 #include "pch.h"
 #include "RendererGL.h"
 
+GLuint gGpuProgramHandle = -1;
+
 IRenderer::IRenderer():
 	m_pMesh(nullptr),
-	m_pCamera(nullptr),
-	mGpuProgramHandle(-1)
+	m_pCamera(nullptr)
 {
 
 }
@@ -24,7 +25,7 @@ IRenderer::~IRenderer()
 {
 	glDeleteShader(mFSHandle);
 	glDeleteShader(mVSHandle);
-	glDeleteProgram(mGpuProgramHandle);
+	glDeleteProgram(gGpuProgramHandle);
 }
 
 bool IRenderer::Init(int argc, char * argv[], DWORD displayMode, int windowPosX, int windowPosY, int windowWidth, int windowHeight, char * title)
@@ -61,7 +62,7 @@ bool IRenderer::Init(int argc, char * argv[], DWORD displayMode, int windowPosX,
 
 GLuint IRenderer::GetGpuProgramHandle()
 {
-	return mGpuProgramHandle;
+	return gGpuProgramHandle;
 }
 
 void IRenderer::SetDisplayFunc(void(*CallbackFunc)())
@@ -77,44 +78,7 @@ void IRenderer::SetIdleFunc(void(*CallbackFunc)())
 void IRenderer::SetTargetMesh(IMesh* pMesh)
 {
 	m_pMesh = pMesh;
-	std::vector<Vertex>* pTargetVertexList = pMesh->m_pVB_Mem;
-	std::vector<uint32_t>* pTargertIndexList = pMesh->m_pIB_Mem;
-
-	//vertex array object(save render-related states of current vertex buffer)
-	GLuint vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	//create buffer object
-	GLuint vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, pTargetVertexList->size() * sizeof(Vertex), (void*)&pTargetVertexList->at(0), GL_STATIC_DRAW);
-
-	//initialize the vertex position attribute from the vertex shader
-	GLuint attr1 =  glGetAttribLocation(mGpuProgramHandle, "inPos");
-	glEnableVertexAttribArray(attr1);
-	glVertexAttribPointer(attr1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0); 
-
-	GLuint attr2 =  glGetAttribLocation(mGpuProgramHandle, "inColor");
-	glEnableVertexAttribArray(attr2);
-	glVertexAttribPointer(attr2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)12);
-
-	GLuint attr3 = glGetAttribLocation(mGpuProgramHandle, "inNormal");
-	glEnableVertexAttribArray(attr3);
-	glVertexAttribPointer(attr3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)28);
-
-	GLuint attr4 = glGetAttribLocation(mGpuProgramHandle, "inTexcoord");
-	glEnableVertexAttribArray(attr3);
-	glVertexAttribPointer(attr3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)40);
-
-	mVAO = vao;
-	mVBO = vbo;
-	//avoid disturbance
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-
+	mVAO = pMesh->mVAO;
 }
 
 void IRenderer::SetCamera(ICamera * pCamera)
@@ -135,20 +99,20 @@ void IRenderer::Render()
 
 	//bind VAO (set saved states in one call)
 	glBindVertexArray(mVAO);
-	glUseProgram(mGpuProgramHandle);
+	glUseProgram(gGpuProgramHandle);
 
 	//update shader variable
-	GLint shaderVar_WorldMat = glGetUniformLocation(mGpuProgramHandle, "gWorldMatrix");
+	GLint shaderVar_WorldMat = glGetUniformLocation(gGpuProgramHandle, "gWorldMatrix");
 	Math::MATRIX4x4 worldMat;
 	m_pMesh->GetWorldMatrix(worldMat);
 	glUniformMatrix4fv(shaderVar_WorldMat,1, true, (float*)&worldMat);
 
-	GLint shaderVar_ViewMat = glGetUniformLocation(mGpuProgramHandle, "gViewMatrix");
+	GLint shaderVar_ViewMat = glGetUniformLocation(gGpuProgramHandle, "gViewMatrix");
 	Math::MATRIX4x4 viewMat;
 	m_pCamera->GetViewMatrix(viewMat);
 	glUniformMatrix4fv(shaderVar_ViewMat, 1, true, (float*)&viewMat);
 
-	GLint shaderVar_ProjMat = glGetUniformLocation(mGpuProgramHandle, "gProjMatrix");
+	GLint shaderVar_ProjMat = glGetUniformLocation(gGpuProgramHandle, "gProjMatrix");
 	Math::MATRIX4x4 projMat;
 	m_pCamera->GetProjMatrix(projMat);
 	glUniformMatrix4fv(shaderVar_ProjMat, 1, true, (float*)&projMat);
@@ -208,7 +172,7 @@ bool IRenderer::mFunction_InitShaders()
 	}
 
 	glUseProgram(programHandle);
-	mGpuProgramHandle = programHandle;
+	gGpuProgramHandle = programHandle;
 
 	return true;
 }

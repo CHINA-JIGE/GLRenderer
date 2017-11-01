@@ -70,13 +70,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)Exec\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)$(Configuration)\Temp\</IntDir>
+    <IntDir>$(SolutionDir)Temp\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)Dependency\Freeglut\include\;$(SolutionDir)Dependency\glew\include\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependency\Freeglut\lib\$(Configuration)\;$(SolutionDir)Dependency\glew\lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Exec\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)$(Configuration)\Temp\</IntDir>
+    <IntDir>$(SolutionDir)Temp\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)Dependency\glew\include\;$(SolutionDir)Dependency\Freeglut\include\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Dependency\Freeglut\lib\$(Configuration)\;$(SolutionDir)Dependency\glew\lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -92,6 +92,9 @@
     <Link>
       <AdditionalDependencies>freeglutd.lib;glewd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <BuildLog>
+      <Path>$(SolutionDir)Log\$(Configuration)\$(MSBuildProjectName).log</Path>
+    </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -110,12 +113,18 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(SolutionDir)pch\$(Configuration)\</PrecompiledHeaderOutputFile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>freeglut.lib;glew.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <BuildLog>
+      <Path>$(SolutionDir)Log\$(Configuration)\$(MSBuildProjectName).log</Path>
+    </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>

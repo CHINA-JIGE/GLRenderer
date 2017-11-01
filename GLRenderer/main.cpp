@@ -29,11 +29,12 @@ int main(int argc, char *argv[])
 
 void Init()
 {
-	//mesh1.CreateSphere(2.0f, 20, 20, false);
+	//mesh1.CreateSphere(5.0f, 20, 20, false);
 	mesh1.LoadFile_OBJ("../teapot.obj");
+	//mesh1.CreateBox(10.0f, 10.0f, 10.0f, 3, 3, 3);
 	cam.SetPosition(-3.0f, 3.0f, 0);
 	cam.SetLookAt(0, 0, 0);
-	cam.SetViewAngle(90.0f,1.3333f);
+	cam.SetViewAngle(60.0f,1.3333f);
 
 }
 
@@ -48,8 +49,8 @@ void Render()
 void Idle()
 {
 	static float angle = 0.0f;
-	angle += 0.0001f;
+	angle += 0.0005f;
 	if (angle > Math::PI*2.0f)angle = 0.0f;
-	cam.SetPosition(15.0f * cosf(angle), 10.0f, 15.0f * sinf(angle));
+	cam.SetPosition(15.0f * cos(angle), 10.0f, 15.0f * sin(angle));
 	renderer.Present();
 }

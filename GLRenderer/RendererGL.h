@@ -10,14 +10,18 @@
 
 #pragma once
 
+//NDEBUG def is relevant to linking stage.
+//if NDEBUG is not defined, "freeglutd.lib" will be linked
+
 #include "pch.h"
 #include "FileLoader.h"
 #include "Camera.h"
 #include "Texture.h"
 #include "Mesh.h"
 
-
 #define ERROR_MSG(msg) std::cout<<msg<<std::endl;//throw std::exception(std::string(msg).c_str());
+
+extern GLuint	gGpuProgramHandle;//gpu program handle
 
 class IRenderer
 {
@@ -57,8 +61,6 @@ private:
 	GLuint		mVSHandle;//vertrex shader
 
 	GLuint		mFSHandle;//fragment shader
-
-	GLuint		mGpuProgramHandle;//gpu program handle
 
 	GLuint		mVAO;//states encapsulation of VBO
 

@@ -71,15 +71,6 @@ struct Vertex
 	Math::VECTOR2 texcoord;
 };
 
-struct VertexShaderOutput_Vertex
-{
-	VECTOR4 posH;//homogenous position
-	VECTOR4 color;
-	VECTOR2 texcoord;
-
-	//Gouraud shading don't need to pass down the posW and normalW to pixel shader
-	//while Phong shading (per-pixel) need it
-};
 
 //in OBJ file ,vertex info is composed of indices
 struct OBJ_vertexInfoIndex
