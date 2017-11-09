@@ -71,6 +71,8 @@
 
 		void		GetVertexBuffer(std::vector<Vertex>& outBuff);
 
+		ITexture* GetTexture();
+
 		void		ComputeBoundingBox(BOUNDINGBOX& outBox);
 
 	private:

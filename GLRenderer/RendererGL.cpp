@@ -97,11 +97,17 @@ void IRenderer::Render()
 	if (m_pMesh == nullptr) { ERROR_MSG("IRenderer: mesh hasn't been set!"); }
 	if(m_pCamera==nullptr) { ERROR_MSG("IRenderer: camera hasn't been set!"); }
 
-	//bind VAO (set saved states in one call)
+	//parameter setting
+	//bind VAO (set saved states in one call) 
+	//bind texture
+	//use gpu program
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_TEXTURE_2D);
 	glBindVertexArray(mVAO);
+	glBindTexture(GL_TEXTURE_2D,m_pMesh->GetTexture()->mTextureHandle);
 	glUseProgram(gGpuProgramHandle);
 
-	//update shader variable
+	//---------update shader variable
 	GLint shaderVar_WorldMat = glGetUniformLocation(gGpuProgramHandle, "gWorldMatrix");
 	Math::MATRIX4x4 worldMat;
 	m_pMesh->GetWorldMatrix(worldMat);
@@ -117,12 +123,18 @@ void IRenderer::Render()
 	m_pCamera->GetProjMatrix(projMat);
 	glUniformMatrix4fv(shaderVar_ProjMat, 1, true, (float*)&projMat);
 
+	//---------texture setting
+	glActiveTexture(GL_TEXTURE0);//use texture 0 (note that tex 0 is active by DEFAULT)
+	GLint shaderVar_Texture = glGetUniformLocation(gGpuProgramHandle,"diffuseMap" );
+	glUniform1i(shaderVar_Texture, 0);//texture No. 0 will be transfered to VRAM if glActiveTexture(GL_TEXTURE0)
+
+
 	//***********issue draw call***********
 	//glDrawArrays(GL_TRIANGLES, 0, m_pTargetVertexList->size());
-	glEnable(GL_CULL_FACE);
 	std::vector<uint32_t>* pTargertIndexList = m_pMesh->m_pIB_Mem;
 	glDrawElements(GL_TRIANGLES, pTargertIndexList->size(), GL_UNSIGNED_INT, &pTargertIndexList->at(0));
 	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D,0);
 	glUseProgram(0);
 }
 

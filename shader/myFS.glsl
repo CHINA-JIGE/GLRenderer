@@ -3,8 +3,11 @@
 in vec3 color;
 in vec2 texcoord;
 
+//diffuse texture 
+uniform sampler2D diffuseMap;
 
 void main()
 {
-	gl_FragColor = vec4(color,1.0f);
+	//component-wise multiplication blending
+	gl_FragColor = texture(diffuseMap, texcoord) * vec4(color,1.0f);
 }

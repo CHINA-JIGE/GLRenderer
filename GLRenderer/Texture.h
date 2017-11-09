@@ -11,19 +11,26 @@ public:
 
 	~ITexture();
 
-	BOOL		LoadPPM(std::string ppmFilePath);
+	bool		LoadPPM(std::string filePath);
 
-	UINT		GetWidth();
+	bool		LoadBMP(std::string filePath);
 
-	UINT		GetHeight();
+	UINT	GetWidth();
 
-	void			SetPixel(UINT x, UINT y,const COLOR3& color);
+	UINT	GetHeight();
+
+	void		SetPixel(UINT x, UINT y,const COLOR3& color);
 
 	COLOR3	GetPixel(UINT x, UINT y);
 
 private:
-	std::vector<COLOR3>* m_pColorBuffer;
+
+	void		mFunction_CreateGLTexture();
+
+	std::vector<COLOR3> mColorBuffer;
 	UINT mWidth;
 	UINT mHeight;
+
+	GLuint mTextureHandle;
 
 };

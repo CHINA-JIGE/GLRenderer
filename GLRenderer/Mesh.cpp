@@ -295,6 +295,11 @@ void IMesh::GetVertexBuffer(std::vector<Vertex>& outBuff)
 	outBuff.assign(iterBegin,iterLast);
 }
 
+ITexture * IMesh::GetTexture()
+{
+	return m_pTexture;
+}
+
 void IMesh::ComputeBoundingBox(BOUNDINGBOX& outBox)
 {
 	mFunction_ComputeBoundingBox();

@@ -22,7 +22,8 @@ void main()
 	//light-normal angle
 	float diffuseIntensity = 1.0f;
 	float diffuseFactor = diffuseIntensity* max(dot(normalW,-lightVec),0);
-	color = (inColor *diffuseFactor).xyz ;
+	vec3 ambientColor = vec3(0.2f,0.2f,0.2f);
+	color = (vec3(1.0f,1.0f,1.0f) *diffuseFactor + ambientColor).xyz ;
 	
 	texcoord = inTexcoord;
 }

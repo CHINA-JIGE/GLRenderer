@@ -9,29 +9,48 @@
 #include "pch.h"
 #include "RendererGL.h"
 
-ITexture::ITexture()
+ITexture::ITexture():
+	mTextureHandle(0)
 {
-	m_pColorBuffer = new std::vector<COLOR3>;
+
 }
 
 ITexture::~ITexture()
 {
-	delete m_pColorBuffer;
+	glDeleteTextures(1, &mTextureHandle);
 }
 
-BOOL ITexture::LoadPPM(std::string ppmFilePath)
+bool ITexture::LoadPPM(std::string ppmFilePath)
 {
-	BOOL yes=IFileManager::ImportFile_PPM(ppmFilePath, mWidth, mHeight, *m_pColorBuffer);
-	if (yes == TRUE)
+	bool yes=IFileManager::ImportFile_PPM(ppmFilePath, mWidth, mHeight, mColorBuffer);
+	if (yes)
 	{
-		return TRUE;
+		mFunction_CreateGLTexture();
+		return true;
 	}
 	else
 	{
 		mWidth = 0;
 		mHeight = 0;
 		ERROR_MSG("ITexture: Load PPM failed!!");
-		return FALSE;
+		return false;
+	}
+}
+
+bool ITexture::LoadBMP(std::string filePath)
+{
+	bool yes = IFileManager::ImportFile_BMP(filePath, mWidth, mHeight, mColorBuffer);
+	if (yes)
+	{
+		mFunction_CreateGLTexture();
+		return true;
+	}
+	else
+	{
+		mWidth = 0;
+		mHeight = 0;
+		ERROR_MSG("ITexture: Load BMP failed!!");
+		return false;
 	}
 }
 
@@ -50,7 +69,7 @@ inline void ITexture::SetPixel(UINT x, UINT y,const COLOR3& color)
 	if (x<mWidth && y<mHeight)
 	{
 		UINT index = y*mWidth + x;
-		m_pColorBuffer->at(index) = color;
+		mColorBuffer.at(index) = color;
 	}
 }
 
@@ -59,7 +78,29 @@ COLOR3 ITexture::GetPixel(UINT x, UINT y)
 	if (x<mWidth && y<mHeight)
 	{
 		UINT index = y*mWidth + x;
-		return m_pColorBuffer->at(index);
+		return mColorBuffer.at(index);
 	}
-	return COLOR3(255, 0, 0);
+	return COLOR3(0, 0, 0);
+}
+
+/*********************************************
+
+						P R I V A T E 
+
+*********************************************/
+
+void ITexture::mFunction_CreateGLTexture()
+{
+	glGenTextures(1, &mTextureHandle);
+	glBindTexture(GL_TEXTURE_2D,mTextureHandle);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);//GL_CLAMP
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);//GL_CLAMP
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//GL_NEAREST
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);//GL_NEAREST
+
+	//"level" parameter stands for mipmap level, 0 for disabling mipmaping
+	glTexImage2D(GL_TEXTURE_2D,0, GL_RGB, mWidth, mHeight, 0, GL_RGB,GL_FLOAT,&mColorBuffer.at(0) );
+
+	//clear bound texture
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

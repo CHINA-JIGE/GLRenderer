@@ -175,7 +175,7 @@ bool IFileManager::ImportFile_OBJ(std::string pFilePath, std::vector<Vertex>& re
 bool IFileManager::ImportFile_PPM(std::string filePath, UINT & outWidth, UINT & outHeight, std::vector<COLOR3>& outColorBuffer)
 {
 	std::ifstream fileIn(filePath,std::ios::binary);
-	if (fileIn.good() == false)
+	if (fileIn.is_open() == false)
 	{
 		ERROR_MSG("Load PPM : File Open Failed!!");
 		return false;
@@ -205,6 +205,114 @@ bool IFileManager::ImportFile_PPM(std::string filePath, UINT & outWidth, UINT & 
 		tmpColor = { byteBuff[3 * i]/255.0f,byteBuff[3 * i+1] / 255.0f,byteBuff[3 * i+2] / 255.0f };
 		outColorBuffer.at(i) = tmpColor;
 	}
+
+	return true;
+}
+
+bool IFileManager::ImportFile_BMP(std::string filePath, UINT& outWidth, UINT& outHeight, std::vector<COLOR3>& outColorBuffer)
+{
+	std::ifstream fileIn(filePath, std::ios::binary);
+	if (fileIn.is_open() == false)
+	{
+		ERROR_MSG("Load BMP : File Open Failed!!");
+		return false;
+	}
+
+	//BMP files structure:
+	//1.file header (14bytes)(including raw data offset)
+	//2.bmp info header (40 bytes)
+	//3. palette : rgba rgba rgba... the number of palette color is defined in 2.
+	//4. color data(need special treatment)
+
+#define READ_FILE(var) fileIn.read((char*)&var,sizeof(var));
+
+	//----------------1,the very first header of .bmp------------
+	IFileManager::BITMAPFILEHEADER bmpFileHeader;
+	READ_FILE(bmpFileHeader.bfType);
+	READ_FILE(bmpFileHeader.bfSize);
+	READ_FILE(bmpFileHeader.bfReserved1);
+	READ_FILE(bmpFileHeader.bfReserved2);
+	READ_FILE(bmpFileHeader.bfOffBits);
+
+	WORD		bmpMagicNumber = bmpFileHeader.bfType;
+	DWORD	imageFileSize = bmpFileHeader.bfSize;
+	DWORD	imageRawDataByteOffset = bmpFileHeader.bfOffBits;
+
+	//"BM" is expected, but if little-endian storage is used, then it should be 'MB'
+	if ( !(bmpMagicNumber=='MB'))//0x4d42
+	{
+		ERROR_MSG("Load BMP : This not a valid Windows Bitmap File!!");
+		fileIn.close();
+		return false;
+	}
+
+	//----------------2, bitmap info------------
+	IFileManager::BITMAPINFOHEADER bmpInfoHeader;//40 bytes long
+	READ_FILE(bmpInfoHeader);
+
+	//following attributes are what we care (others are usually defaulted to some value)
+	DWORD bitmapInfoStructureSize = bmpInfoHeader.biSize;
+	bool isBitmapCompressed = (bmpInfoHeader.biCompression != BI_RGB);//0 for no compression
+	LONG pixelWidth = bmpInfoHeader.biWidth;
+	LONG pixelHeight = bmpInfoHeader.biHeight;
+	WORD bitsPerPixel = bmpInfoHeader.biBitCount;
+	WORD bytesPerPixel = bitsPerPixel / 8;
+
+	//due to historical reason, structure defined in win gdi could be obsolete
+	//hence they might vary in byte size.
+	if (bitmapInfoStructureSize != sizeof(BITMAPINFOHEADER))
+	{
+		ERROR_MSG("Load BMP : This is an obsolete or unsupported Windows Bitmap File!! load failure.");
+		fileIn.close();
+		return false;
+	}
+
+	if (isBitmapCompressed)
+	{
+		ERROR_MSG("Load BMP : this bitmap is compressed. load failure.");
+		fileIn.close();
+		return false;
+	}
+
+	//----------------3, palette --------------
+	//but if bpp is 24 or 32, then no palette will be loaded. but bmp don't have alpha channel
+	if ( bitsPerPixel != 24)
+	{
+		ERROR_MSG("Load BMP : pixel format is not supported. it must be 24 or 32 bits/pixel.");
+		fileIn.close();
+		return false;
+	}
+
+	//----------------4, raw data (rgb)------------
+	//make sure that bit count of one row is multiple of 32 
+	//so each row might have extraneous area to pad to multiple of 4 bytes
+	//(no wonder a "ROW PITCH" is needed instead of pixelWidth to access a pixel)
+	uint32_t rowByteCount = (((pixelWidth * bitsPerPixel) + 31) / 32 * 4);
+	uint32_t byteSize = rowByteCount * pixelHeight;
+	std::vector<BYTE> rgbLists(byteSize);
+	fileIn.read((char*)&rgbLists.at(0), byteSize);
+
+	//BGR(255) to RGB(normalized)
+	outColorBuffer.resize(pixelWidth * pixelHeight);
+	//but be CAREFUL: bmp pixels scans from bottom-LEFT to top-RIGHT
+	//(just as cartesian coordinate distributes)
+	for (uint32_t j = 0; j < pixelHeight; ++j)
+	{
+		for (uint32_t i = 0; i < pixelWidth; ++i)
+		{
+			uint32_t srcIndex = j*rowByteCount + i;//source byte offset
+			uint32_t destIndex = (pixelHeight - 1 - j) * pixelWidth + i;//dest color index
+
+			VECTOR3& c_dest = outColorBuffer.at(destIndex);
+			c_dest.x = rgbLists.at(srcIndex+2) / 255.0f;
+			c_dest.y = rgbLists.at(srcIndex+1) / 255.0f;
+			c_dest.z = rgbLists.at(srcIndex+0) / 255.0f;
+		}
+	}
+
+
+	outWidth = pixelWidth;
+	outHeight = pixelHeight;
 
 	return true;
 }
