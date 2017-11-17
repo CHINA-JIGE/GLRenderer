@@ -287,9 +287,10 @@ bool IFileManager::ImportFile_BMP(std::string filePath, UINT& outWidth, UINT& ou
 	//make sure that bit count of one row is multiple of 32 
 	//so each row might have extraneous area to pad to multiple of 4 bytes
 	//(no wonder a "ROW PITCH" is needed instead of pixelWidth to access a pixel)
-	uint32_t rowByteCount = (((pixelWidth * bitsPerPixel) + 31) / 32 * 4);
-	uint32_t byteSize = rowByteCount * pixelHeight;
+	uint32_t rowPitch = (((pixelWidth * bitsPerPixel) + 31) / 32 * 4);
+	uint32_t byteSize = rowPitch * pixelHeight;
 	std::vector<BYTE> rgbLists(byteSize);
+	fileIn.seekg(imageRawDataByteOffset);
 	fileIn.read((char*)&rgbLists.at(0), byteSize);
 
 	//BGR(255) to RGB(normalized)
@@ -300,16 +301,16 @@ bool IFileManager::ImportFile_BMP(std::string filePath, UINT& outWidth, UINT& ou
 	{
 		for (uint32_t i = 0; i < pixelWidth; ++i)
 		{
-			uint32_t srcIndex = j*rowByteCount + i;//source byte offset
+			uint32_t srcIndex = j*rowPitch + i * 3;//source byte offset
+			//uint32_t destIndex = (pixelHeight - 1 - j) * pixelWidth + i;//dest color index
 			uint32_t destIndex = (pixelHeight - 1 - j) * pixelWidth + i;//dest color index
 
 			VECTOR3& c_dest = outColorBuffer.at(destIndex);
-			c_dest.x = rgbLists.at(srcIndex+2) / 255.0f;
-			c_dest.y = rgbLists.at(srcIndex+1) / 255.0f;
-			c_dest.z = rgbLists.at(srcIndex+0) / 255.0f;
+			c_dest.x = float(rgbLists.at(srcIndex+2)) / 255.0f;
+			c_dest.y = float(rgbLists.at(srcIndex+1)) / 255.0f;
+			c_dest.z = float(rgbLists.at(srcIndex+0)) / 255.0f;
 		}
 	}
-
 
 	outWidth = pixelWidth;
 	outHeight = pixelHeight;

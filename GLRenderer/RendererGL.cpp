@@ -123,6 +123,10 @@ void IRenderer::Render()
 	m_pCamera->GetProjMatrix(projMat);
 	glUniformMatrix4fv(shaderVar_ProjMat, 1, true, (float*)&projMat);
 
+	GLint shaderVar_EyePos = glGetUniformLocation(gGpuProgramHandle, "gEyePos");
+	VECTOR3 camPos = m_pCamera->GetPosition();
+	glUniform3f(shaderVar_EyePos, camPos.x,camPos.y,camPos.z);
+
 	//---------texture setting
 	glActiveTexture(GL_TEXTURE0);//use texture 0 (note that tex 0 is active by DEFAULT)
 	GLint shaderVar_Texture = glGetUniformLocation(gGpuProgramHandle,"diffuseMap" );

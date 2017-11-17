@@ -32,9 +32,11 @@ void Init()
 {
 	//diffuseMap.LoadPPM("../media/earth.ppm");
 	diffuseMap.LoadBMP("../media/rock.bmp");
+	//diffuseMap.LoadBMP("../media/grass.bmp");
 
 	//mesh1.CreateSphere(5.0f, 20, 20, false);
-	mesh1.LoadFile_OBJ("../media/star.obj");
+	//mesh1.LoadFile_OBJ("../media/star.obj");
+	mesh1.LoadFile_OBJ("../media/earth.obj");
 	//mesh1.CreateBox(10.0f, 10.0f, 10.0f, 3, 3, 3);
 	mesh1.SetTexture(&diffuseMap);
 	cam.SetPosition(1.0f, 0, 0);
